@@ -7,7 +7,7 @@ import re
 import os
 
 # ChatVRMのAPIエンドポイント
-API_URL = "http://localhost:3000/api/speak_text"
+API_URL = "http://localhost:3001/api/speak_text"
 
 # 喋らせたいテキストリスト
 texts = [
