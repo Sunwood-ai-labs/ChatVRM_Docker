@@ -12,6 +12,7 @@ const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
 type Data = {
   status: "ok" | "error";
   message?: string;
+  audio?: string; // 追加: 音声データ（data:audio/wav;base64,...）
 };
 
 export default async function handler(
@@ -46,18 +47,22 @@ export default async function handler(
     await new Promise<void>((resolve, reject) => {
       const ws = new WebSocket(WS_URL);
       ws.on("open", () => {
-        ws.send(audioBuffer, { binary: true }, (err) => {
+        ws.send(audioBuffer, { binary: true }, (err: Error | undefined) => {
           ws.close();
           if (err) reject(err);
           else resolve();
         });
       });
-      ws.on("error", (err) => {
+      ws.on("error", (err: Error) => {
         reject(err);
       });
     });
 
-    res.status(200).json({ status: "ok", message: "VRMに発話指示を送信しました" });
+    res.status(200).json({
+      status: "ok",
+      message: "VRMに発話指示を送信しました",
+      audio: result.audio // data:audio/wav;base64,... 形式
+    });
   } catch (e: any) {
     res
       .status(500)
