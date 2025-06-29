@@ -1,8 +1,8 @@
 <div align="center">
 
-# AgentVRM
+![](https://github.com/user-attachments/assets/9627b73a-3b5b-4a20-bafa-4a2a69a31ab0)
 
-<img src="https://raw.githubusercontent.com/pixiv/ChatVRM/main/public/ogp.png" width="600">
+# AgentVRM
 
 </div>
 
