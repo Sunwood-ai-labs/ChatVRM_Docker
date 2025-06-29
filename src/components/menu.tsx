@@ -42,6 +42,65 @@ export const Menu = ({
   const { viewer } = useContext(ViewerContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 音声アップロード用
+  const audioInputRef = useRef<HTMLInputElement>(null);
+
+  // WebSocketで音声バイナリを受信して喋らせる
+  React.useEffect(() => {
+    if (!viewer.model) return;
+    const wsUrl =
+      typeof window !== "undefined"
+        ? "ws://localhost:8080"
+        : process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+    const ws = new WebSocket(wsUrl);
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => {
+      console.log("WebSocket接続");
+    };
+    ws.onmessage = async (event) => {
+      if (!(event.data instanceof ArrayBuffer)) return;
+      const buffer = event.data;
+      const dummyScreenplay = {
+        expression: "neutral" as const,
+        talk: { style: "talk" as const, speakerX: 0, speakerY: 0, message: "" },
+      };
+      await viewer.model!.speak(buffer, dummyScreenplay);
+    };
+    ws.onclose = () => {
+      console.log("WebSocket切断");
+    };
+    return () => {
+      ws.close();
+    };
+  }, [viewer.model]);
+
+  const handleUploadAudio = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !viewer.model) return;
+
+    // APIにバイナリPOST
+    const res = await fetch("/api/speak_external_audio", {
+      method: "POST",
+      headers: {
+        "Content-Type": file.type || "audio/wav",
+      },
+      body: file,
+    });
+    const buffer = await res.arrayBuffer();
+
+    // ダミーScreenplay
+    const dummyScreenplay = {
+      expression: "neutral" as const,
+      talk: { style: "talk" as const, speakerX: 0, speakerY: 0, message: "" },
+    };
+
+    await viewer.model.speak(buffer, dummyScreenplay);
+  };
+
+  const handleClickAudioInput = () => {
+    audioInputRef.current?.click();
+  };
+
   const handleChangeSystemPrompt = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       onChangeSystemPrompt(event.target.value);
@@ -145,6 +204,22 @@ export const Menu = ({
           onChangeKoeiromapKey={handleChangeKoeiromapKey}
         />
       )}
+      {/* 音声ファイルアップロードUI */}
+      <div className="my-8">
+        <input
+          type="file"
+          accept="audio/*"
+          ref={audioInputRef}
+          style={{ display: "inline" }}
+          onChange={handleUploadAudio}
+        />
+        <button
+          className="ml-2 px-8 py-4 bg-secondary text-white rounded"
+          onClick={handleClickAudioInput}
+        >
+          音声ファイルを選択して喋らせる
+        </button>
+      </div>
       {!showChatLog && assistantMessage && (
         <AssistantText message={assistantMessage} />
       )}
