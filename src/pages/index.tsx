@@ -6,7 +6,7 @@ import {
   textsToScreenplay,
   Screenplay,
 } from "@/features/messages/messages";
-import { speakCharacter } from "@/features/messages/speakCharacter";
+import { speakCharacterWithVoicevox } from "@/features/messages/speakCharacter";
 import { MessageInputContainer } from "@/components/messageInputContainer";
 import { SYSTEM_PROMPT } from "@/features/constants/systemPromptConstants";
 import { KoeiroParam, DEFAULT_PARAM } from "@/features/constants/koeiroParam";
@@ -67,7 +67,9 @@ export default function Home() {
       onStart?: () => void,
       onEnd?: () => void
     ) => {
-      speakCharacter(screenplay, viewer, koeiromapKey, onStart, onEnd);
+      console.log("[DEBUG] handleSpeakAi called", screenplay);
+      // VOICEVOXで喋らせる
+      speakCharacterWithVoicevox(screenplay, viewer, 1, 1.0, onStart, onEnd);
     },
     [viewer, koeiromapKey]
   );
@@ -77,6 +79,7 @@ export default function Home() {
    */
   const handleSendChat = useCallback(
     async (text: string) => {
+      console.log("[DEBUG] handleSendChat called", text);
       if (!openAiKey) {
         setAssistantMessage("APIキーが入力されていません");
         return;
@@ -160,6 +163,7 @@ export default function Home() {
 
             // 文ごとに音声を生成 & 再生、返答を表示
             const currentAssistantMessage = sentences.join(" ");
+            console.log("[DEBUG] handleSendChat: call handleSpeakAi", aiTalks[0]);
             handleSpeakAi(aiTalks[0], () => {
               setAssistantMessage(currentAssistantMessage);
             });

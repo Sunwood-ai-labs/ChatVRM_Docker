@@ -1,7 +1,7 @@
 import websocket
 
 # 音声ファイルのパス
-audio_path = "sample-talk01.wav"
+audio_path = "assets/sample-talk01.wav"
 
 # WebSocketサーバーのURL
 ws_url = "ws://localhost:8080"
