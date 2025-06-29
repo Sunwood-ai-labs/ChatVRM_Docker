@@ -6,13 +6,14 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_WS_URL=ws://ws-server:8080
+      - VOICEVOX_ENGINE_URL=http://voicevox_engine:50021
     depends_on:
       - ws-server
 
@@ -29,3 +30,25 @@ services:
       - NODE_ENV=production
       - WS_PORT=8080
       - WS_HOST=0.0.0.0
+
+  voicevox_engine:
+    # VOICEVOX Engine Docker image (GPU version)
+    image: voicevox/voicevox_engine:nvidia-latest
+    ports:
+      - '50021:50021'
+    tty: true
+    # Enable GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    # Health monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:50021/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

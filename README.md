@@ -29,6 +29,22 @@ AgentVRMはブラウザで3DキャラクターをAgent制御で動作させる�
 AgentVRMの各機能は主に以下の技術を使用しています。
 
 - **🔊 音声合成・再生**: [VOICEVOX Engine](https://voicevox.hiroshiba.jp/)
+
+> [!TIP]
+> 🐳 **docker-composeでVOICEVOXエンジンのURLを指定するには？**
+>
+> `docker-compose.yml` の `environment` セクションで `VOICEVOX_ENGINE_URL` を設定できます。
+> 例:
+>
+> ```yaml
+> services:
+>   nextjs:
+>     environment:
+>       - VOICEVOX_ENGINE_URL=http://voicevox_engine:50021
+> ```
+>
+> デフォルト値は `.env` または `.env.example` で `http://localhost:50021` です。
+> Docker環境では `http://voicevox_engine:50021` を指定してください。
 - **🤖 3Dキャラクター表示**: [@pixiv/three-vrm](https://github.com/pixiv/three-vrm)
 - **📡 外部制御通信**: WebSocket + REST API
 - **🐍 Agent制御**: Python制御サンプル
