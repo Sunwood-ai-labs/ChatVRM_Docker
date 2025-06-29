@@ -11,8 +11,12 @@ example/
 ├── assets/
 │   ├── out.wav
 │   ├── output_voicevox.wav
+│   ├── output_speak_text_1.wav
+│   ├── output_speak_text_2.wav
+│   ├── output_speak_text_3.wav
 │   └── sample-talk01.wav
 ├── speak_text_api_sample.py
+├── speak_text_conversation_sample.py
 ├── voicevox_api_sample.py
 ├── voicevox_tts_sample.py
 ├── ws_audio_sender.py
@@ -25,13 +29,14 @@ example/
 
 ## 📝 サンプルスクリプト一覧と用途
 
-| ファイル名 | 用途・説明 |
-|------------|-----------|
-| `speak_text_api_sample.py` | テキストをPOSTするだけでVRMキャラクターがVOICEVOX音声で喋る（最もシンプル） |
-| `voicevox_api_sample.py`   | テキスト→音声ファイル生成→WebSocket送信でVRMが喋る（音声ファイルも保存） |
-| `voicevox_tts_sample.py`   | テキスト→音声ファイル生成のみ（WebSocket送信なし） |
-| `ws_audio_sender.py`       | 任意のWAVファイルをWebSocket経由で送信しVRMに喋らせる |
-| `post_audio_sample.py`     | 任意のWAVファイルをAPI経由で送信し、レスポンスを保存するサンプル |
+| ファイル名                        | 用途・説明 |
+|-----------------------------------|-----------|
+| `speak_text_api_sample.py`        | テキストをPOSTするだけでVRMキャラクターがVOICEVOX音声で喋る（最もシンプル） |
+| `speak_text_conversation_sample.py` | 3回分のテキストを順に喋らせ、音声ファイルを保存・会話時間分待機・loguruで見やすいログ（レスポンスはキーのみ表示）|
+| `voicevox_api_sample.py`          | テキスト→音声ファイル生成→WebSocket送信でVRMが喋る（音声ファイルも保存） |
+| `voicevox_tts_sample.py`          | テキスト→音声ファイル生成のみ（WebSocket送信なし） |
+| `ws_audio_sender.py`              | 任意のWAVファイルをWebSocket経由で送信しVRMに喋らせる |
+| `post_audio_sample.py`            | 任意のWAVファイルをAPI経由で送信し、レスポンスを保存するサンプル |
 
 ---
 
@@ -48,7 +53,7 @@ example/
 - Python用（サンプル実行前に）:
 
   ```
-  pip install requests websocket-client
+  pip install requests websocket-client loguru
   ```
 
 ### 2. WebSocketサーバーの起動
@@ -73,6 +78,12 @@ npm run dev
   python speak_text_api_sample.py
   ```
 
+- 3回分の会話を連続で喋らせ、音声ファイル保存・会話時間分待機・loguruで見やすいログ（レスポンスはキーのみ表示）:
+
+  ```
+  python speak_text_conversation_sample.py
+  ```
+
 - 音声ファイル生成＋WebSocket送信:
 
   ```
@@ -84,6 +95,16 @@ npm run dev
   ```
   python ws_audio_sender.py
   ```
+
+---
+
+## ✨ `speak_text_conversation_sample.py` の特徴
+
+- 3回分のテキストを順に `/api/speak_text` へ送信し、各レスポンスの音声データを `assets/output_speak_text_1.wav` などに保存
+- 保存したwavファイルの長さ（秒）を自動計算し、その時間だけ待機して次の会話へ進行
+- サーバーレスポンスはバイナリや長い値を出さず、キーのみをloguruで見やすく表示
+- 進行状況・エラーもloguruで整形
+- 依存パッケージ: `loguru`, `requests`
 
 ---
 
