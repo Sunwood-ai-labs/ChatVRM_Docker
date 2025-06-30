@@ -7,7 +7,7 @@ import re
 import os
 
 # ChatVRMのAPIエンドポイント
-API_URL = "http://localhost:3001/api/speak_text"
+API_URL = "http://localhost:3002/api/speak_text"
 
 # 喋らせたいテキストリスト
 texts = [
@@ -15,8 +15,8 @@ texts = [
     "2回目の発話です。会話の流れをシミュレートしています。",
     "3回目の発話です。これでサンプルは終了です。"
 ]
-speaker_id = 2
-speed_scale = 1.0
+speaker_id = 1
+speed_scale = 1.3
 
 os.makedirs("assets", exist_ok=True)
 

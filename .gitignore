@@ -40,3 +40,4 @@ example/assets/output*.wav
 .SourceSageAssets/
 
 *.log
+example/assets/*.wav
