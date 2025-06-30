@@ -20,7 +20,8 @@ export class Model {
 
   constructor(lookAtTargetParent: THREE.Object3D) {
     this._lookAtTargetParent = lookAtTargetParent;
-    this._lipSync = new LipSync(new AudioContext());
+    // AudioContext/LipSyncはユーザー操作後に生成する
+    this._lipSync = undefined;
   }
 
   public async loadVRM(url: string): Promise<void> {
@@ -77,6 +78,16 @@ export class Model {
       });
     });
   }
+
+  // ▼▼▼ ここから追加 ▼▼▼
+  public resumeAudio(): void {
+    // まだ生成されていなければここで初めてAudioContext/LipSyncを生成
+    if (!this._lipSync) {
+      this._lipSync = new LipSync(new AudioContext());
+    }
+    this._lipSync.resume();
+  }
+  // ▲▲▲ ここまで追加 ▲▲▲
 
   public update(delta: number): void {
     if (this._lipSync) {
