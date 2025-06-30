@@ -68,7 +68,7 @@ export default function Home() {
     ) => {
       console.log("[DEBUG] handleSpeakAi called", screenplay);
       // VOICEVOXで喋らせる
-      speakCharacterWithVoicevox(screenplay, viewer, 1, 1.0, onStart, onEnd);
+      speakCharacterWithVoicevox(screenplay, viewer, { speakerId: 1, speedScale: 1.0 }, onStart, onEnd);
     },
     [viewer, koeiromapKey]
   );
