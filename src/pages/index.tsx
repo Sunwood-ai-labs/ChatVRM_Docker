@@ -25,6 +25,27 @@ export default function Home() {
   const [chatProcessing, setChatProcessing] = useState(false);
   const [chatLog, setChatLog] = useState<Message[]>([]);
   const [assistantMessage, setAssistantMessage] = useState("");
+  // ▼▼▼ ここから追加 ▼▼▼
+  const [isFirstInteraction, setIsFirstInteraction] = useState(true);
+  // ▲▲▲ ここまで追加 ▲▲▲
+
+  // ▼▼▼ AudioContext状態監視用 ▼▼▼
+  const [audioState, setAudioState] = useState<"suspended" | "running" | "closed" | "uninitialized">("uninitialized");
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    interval = setInterval(() => {
+      const state =
+        viewer.model && (viewer.model as any)._lipSync && (viewer.model as any)._lipSync.audio
+          ? (viewer.model as any)._lipSync.audio.state
+          : "uninitialized";
+      setAudioState(state);
+    }, 500);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [viewer]);
+  // ▲▲▲ AudioContext状態監視用 ▲▲▲
 
   useEffect(() => {
     if (window.localStorage.getItem("chatVRMParams")) {
@@ -78,12 +99,20 @@ export default function Home() {
    */
   const handleSendChat = useCallback(
     async (text: string) => {
+
+      // ▼▼▼ ここから追加 ▼▼▼
+      // 最初のインタラクションでAudioContextを再開する
+      if (isFirstInteraction) {
+        viewer.resumeAudio();
+        setIsFirstInteraction(false);
+      }
+      // ▲▲▲ ここまで追加 ▲▲▲
+
       console.log("[DEBUG] handleSendChat called", text);
       if (!openAiKey) {
         setAssistantMessage("APIキーが入力されていません");
         return;
       }
-
       const newMessage = text;
 
       if (newMessage == null) return;
@@ -188,7 +217,37 @@ export default function Home() {
   );
 
   return (
-    <div className={"font-M_PLUS_2"}>
+    <div
+      className={"font-M_PLUS_2"}
+      onClick={() => {
+        if (isFirstInteraction) {
+          viewer.resumeAudio();
+          setIsFirstInteraction(false);
+        }
+      }}
+    >
+      {/* ▼▼▼ AudioContext状態マーク表示 ▼▼▼ */}
+      <div style={{
+        position: "fixed",
+        top: 10,
+        right: 10,
+        zIndex: 1000,
+        background: "rgba(255,255,255,0.85)",
+        borderRadius: "8px",
+        padding: "4px 12px",
+        fontWeight: "bold",
+        fontSize: "1rem",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5em",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+      }}>
+        {audioState === "uninitialized" && <span>🕒 音声未初期化</span>}
+        {audioState === "suspended" && <span>🔒 音声ロック中</span>}
+        {audioState === "running" && <span>🔊 音声有効</span>}
+        {audioState === "closed" && <span>❌ 音声無効</span>}
+      </div>
+      {/* ▲▲▲ AudioContext状態マーク表示 ▲▲▲ */}
       <Meta />
       <VrmViewer />
       <MessageInputContainer
