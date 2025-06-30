@@ -11,7 +11,7 @@ COPY ./package.json ./package-lock.json ./
 RUN npm install --omit=dev
 
 # サーバースクリプトをコピー
-COPY . /app/server
+COPY server /app/server
 
 # サーバー起動
 CMD ["node", "server/ws-server.js"]
