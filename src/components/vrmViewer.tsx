@@ -9,7 +9,11 @@ export default function VrmViewer() {
     (canvas: HTMLCanvasElement) => {
       if (canvas) {
         viewer.setup(canvas);
-        viewer.loadVrm(buildUrl("/Kiyoka_20241223143815.vrm"));
+        viewer.loadVrm(
+          buildUrl(
+            process.env.NEXT_PUBLIC_VRM_FILENAME || "/Kiyoka_20241223143815.vrm"
+          )
+        );
 
         // Drag and DropでVRMを差し替え
         canvas.addEventListener("dragover", function (event) {
