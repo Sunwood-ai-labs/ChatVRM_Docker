@@ -14,6 +14,16 @@ export class LipSync {
     this.timeDomainData = new Float32Array(TIME_DOMAIN_DATA_LENGTH);
   }
 
+  // ▼▼▼ ここから追加 ▼▼▼
+  public resume(): void {
+    if (this.audio.state === 'suspended') {
+      this.audio.resume().then(() => {
+        console.log('AudioContext has been resumed.');
+      });
+    }
+  }
+  // ▲▲▲ ここまで追加 ▲▲▲
+
   public update(): LipSyncAnalyzeResult {
     this.analyser.getFloatTimeDomainData(this.timeDomainData);
 
