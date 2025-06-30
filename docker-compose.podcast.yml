@@ -1,4 +1,4 @@
-version: "3.9"
+# version: "3.9"
 
 services:
 
@@ -12,9 +12,11 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_WS_URL=ws://ws-server:8080
-      - VOICEVOX_ENGINE_URL=http://voicevox_engine:50021
+      - VOICEVOX_ENGINE_URL=${VOICEVOX_ENGINE_URL}
     depends_on:
       - ws-server
+    # env_file:
+    #   - ./.env
 
   nextjs2:
     build:
@@ -26,16 +28,16 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_WS_URL=ws://ws-server:8080
-      - VOICEVOX_ENGINE_URL=http://voicevox_engine:50021
+      - VOICEVOX_ENGINE_URL=${VOICEVOX_ENGINE_URL}
     depends_on:
       - ws-server
-
+    # env_file:
+    #   - ./.env
+      
   ws-server:
-    image: node:16.14.2
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: node server/ws-server.js
+    build:
+      context: .
+      dockerfile: server/Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -43,24 +45,6 @@ services:
       - WS_PORT=8080
       - WS_HOST=0.0.0.0
 
-  voicevox_engine:
-    image: voicevox/voicevox_engine:nvidia-latest
-    ports:
-      - '50021:50021'
-    tty: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:50021/docs"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   nextjs1_node_modules:
