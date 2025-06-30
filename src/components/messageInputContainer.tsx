@@ -1,5 +1,6 @@
 import { MessageInput } from "@/components/messageInput";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
+import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 
 type Props = {
   isChatProcessing: boolean;
@@ -20,6 +21,7 @@ export const MessageInputContainer = ({
   const [speechRecognition, setSpeechRecognition] =
     useState<SpeechRecognition>();
   const [isMicRecording, setIsMicRecording] = useState(false);
+  const { viewer } = useContext(ViewerContext);
 
   // 音声認識の結果を処理する
   const handleRecognitionResult = useCallback(
@@ -58,6 +60,42 @@ export const MessageInputContainer = ({
     onChatProcessStart(userMessage);
   }, [onChatProcessStart, userMessage]);
 
+  // 音声ファイルがアップロードされた時の処理
+  const handleAudioFileSelected = useCallback(async (file: File) => {
+    if (!viewer.model) {
+      console.error("VRMモデルが読み込まれていません");
+      return;
+    }
+
+    try {
+      // APIにバイナリPOST
+      const res = await fetch("/api/speak_external_audio", {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type || "audio/wav",
+        },
+        body: file,
+      });
+      
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+      
+      const buffer = await res.arrayBuffer();
+
+      // ダミーScreenplay
+      const dummyScreenplay = {
+        expression: "neutral" as const,
+        talk: { style: "talk" as const, speakerX: 0, speakerY: 0, message: "" },
+      };
+
+      await viewer.model.speak(buffer, dummyScreenplay);
+      console.log("音声ファイルの再生が完了しました:", file.name);
+    } catch (error) {
+      console.error("音声ファイルの処理中にエラーが発生しました:", error);
+    }
+  }, [viewer.model]);
+
   useEffect(() => {
     const SpeechRecognition =
       window.webkitSpeechRecognition || window.SpeechRecognition;
@@ -84,13 +122,16 @@ export const MessageInputContainer = ({
   }, [isChatProcessing]);
 
   return (
-    <MessageInput
-      userMessage={userMessage}
-      isChatProcessing={isChatProcessing}
-      isMicRecording={isMicRecording}
-      onChangeUserMessage={(e) => setUserMessage(e.target.value)}
-      onClickMicButton={handleClickMicButton}
-      onClickSendButton={handleClickSendButton}
-    />
+    <>
+      <MessageInput
+        userMessage={userMessage}
+        isChatProcessing={isChatProcessing}
+        isMicRecording={isMicRecording}
+        onChangeUserMessage={(e) => setUserMessage(e.target.value)}
+        onClickMicButton={handleClickMicButton}
+        onClickSendButton={handleClickSendButton}
+        onAudioFileSelected={handleAudioFileSelected}
+      />
+    </>
   );
 };
