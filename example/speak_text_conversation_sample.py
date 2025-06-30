@@ -15,7 +15,7 @@ texts = [
     "2回目の発話です。会話の流れをシミュレートしています。",
     "3回目の発話です。これでサンプルは終了です。"
 ]
-speaker_id = 1
+speaker_id = 2
 speed_scale = 1.0
 
 os.makedirs("assets", exist_ok=True)

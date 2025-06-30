@@ -48,10 +48,7 @@ export const Menu = ({
   // WebSocketで音声バイナリを受信して喋らせる
   React.useEffect(() => {
     if (!viewer.model) return;
-    const wsUrl =
-      typeof window !== "undefined"
-        ? "ws://localhost:8080"
-        : process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
     const ws = new WebSocket(wsUrl);
     ws.binaryType = "arraybuffer";
     ws.onopen = () => {
