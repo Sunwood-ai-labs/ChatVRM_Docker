@@ -2,6 +2,7 @@ import { buildUrl } from "@/utils/buildUrl";
 import { Html, Head, Main, NextScript } from "next/document";
 
 export default function Document() {
+  const bgImage = process.env.NEXT_PUBLIC_BG_IMAGE || "/bg-d.png";
   return (
     <Html lang="ja">
       <Head>
@@ -16,7 +17,7 @@ export default function Document() {
           rel="stylesheet"
         />
       </Head>
-      <body style={{ backgroundImage: `url(${buildUrl("/bg-d.png")})` }}>
+      <body style={{ backgroundImage: `url(${buildUrl(bgImage)})` }}>
         <Main />
         <NextScript />
       </body>
