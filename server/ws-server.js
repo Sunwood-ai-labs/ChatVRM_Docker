@@ -5,6 +5,7 @@
  * デバッグ用に詳細なログを出力
  */
 const WebSocket = require('ws');
+const url = require('url'); // ★ 追加
 
 // 環境変数からポート・ホストを取得（デフォルト: 8080, 0.0.0.0）
 const WS_PORT = process.env.WS_PORT ? parseInt(process.env.WS_PORT, 10) : 8080;
@@ -17,7 +18,13 @@ const wss = new WebSocket.Server({ port: WS_PORT, host: WS_HOST });
 
 wss.on('connection', function connection(ws, req) {
   const ip = req && req.socket ? req.socket.remoteAddress : 'unknown';
-  console.log(`[INFO] クライアント接続: IP=${ip} 現在の接続数=${wss.clients.size}`);
+
+  // ★ 追加: 接続元を判定するロジック
+  const parameters = url.parse(req.url, true);
+  const isApiClient = parameters.query.from === 'api';
+  ws.isApiClient = isApiClient; // WebSocketオブジェクトに情報を追加
+
+  console.log(`[INFO] クライアント接続: IP=${ip} fromAPI=${isApiClient} 現在の接続数=${wss.clients.size}`);
 
   ws.on('message', function incoming(data, isBinary) {
     try {
@@ -29,12 +36,13 @@ wss.on('connection', function connection(ws, req) {
       if (isBinary) {
         let broadcastCount = 0;
         wss.clients.forEach(function each(client) {
-          if (client.readyState === WebSocket.OPEN) {
+          // ★ 修正: APIクライアントには送信しない
+          if (client.readyState === WebSocket.OPEN && !client.isApiClient) {
             client.send(data, { binary: true });
             broadcastCount++;
           }
         });
-        console.log(`[INFO] 音声バイナリをブロードキャスト: ${broadcastCount} クライアント`);
+        console.log(`[INFO] 音声バイナリをブロードキャスト: ${broadcastCount} ブラウザクライアント`);
       }
     } catch (err) {
       console.error('[ERROR] メッセージ処理中に例外:', err);

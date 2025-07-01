@@ -1,6 +1,24 @@
 import fetch from "node-fetch";
 
 /**
+ * VOICEVOX audio_query API レスポンス型
+ * 必要に応じてプロパティを追加してください
+ */
+export interface AudioQuery {
+  accent_phrases: any[]; // 詳細な型はVOICEVOX API仕様参照
+  speedScale: number;
+  pitchScale: number;
+  intonationScale: number;
+  volumeScale: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
+  outputSamplingRate: number;
+  outputStereo: boolean;
+  kana: string;
+  [key: string]: any; // 将来の拡張用
+}
+
+/**
  * VOICEVOXエンジンで音声合成を行う
  * @param text 合成するテキスト
  * @param speakerId VOICEVOX話者ID
@@ -29,7 +47,7 @@ export async function voicevoxTTS(
       `VOICEVOX audio_query failed: status=${audioQueryRes.status}, body=${errText}`
     );
   }
-  const audioQuery = await audioQueryRes.json();
+  const audioQuery = await audioQueryRes.json() as AudioQuery;
 
   // パラメータ調整（話速など）
   audioQuery.speedScale = speedScale;

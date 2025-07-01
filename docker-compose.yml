@@ -6,13 +6,14 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_WS_URL=ws://ws-server:8080
+      - VOICEVOX_ENGINE_URL=${VOICEVOX_ENGINE_URL}
     depends_on:
       - ws-server
 

@@ -70,26 +70,28 @@ export const fetchAudio = async (
 };
  
 /**
- * VOICEVOXで音声合成し、VRMに喋らせる
+ * VOICEVOXで音声合成し、ArrayBufferを返す
  */
 export const fetchAudioVoicevox = async (
   talk: Talk,
-  speakerId: number,
-  speedScale: number = 1.0
-): Promise<ArrayBuffer> => {
-  // VOICEVOX TTS APIへPOST
+  options: { speakerId: number; speedScale?: number }
+): Promise<ArrayBuffer | null> => {
   const res = await fetch("/api/voicevox_tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       text: talk.message,
-      speakerId,
-      speedScale,
+      speakerId: options.speakerId,
+      speedScale: options.speedScale ?? 1.0,
     }),
   });
+  if (!res.ok) {
+    console.error("VOICEVOX API error:", await res.text());
+    return null;
+  }
   const data = await res.json();
-  if (!data.audio) throw new Error("VOICEVOX API error");
-  // data URIからbase64部分を抽出
+  if (!data.audio) throw new Error("VOICEVOX API did not return audio");
+
   const base64 = data.audio.split(",")[1];
   const binary = atob(base64);
   const len = binary.length;
@@ -97,8 +99,6 @@ export const fetchAudioVoicevox = async (
   for (let i = 0; i < len; i++) {
     buffer[i] = binary.charCodeAt(i);
   }
-  // デバッグ: 取得したArrayBufferの長さを出力
-  console.log("[VOICEVOX] fetchAudioVoicevox ArrayBuffer length:", buffer.length);
   return buffer.buffer;
 };
 
@@ -106,46 +106,59 @@ export const fetchAudioVoicevox = async (
 /**
  * VOICEVOX音声でVRMに喋らせる
  */
-export const speakCharacterWithVoicevox = (
-  screenplay: Screenplay,
-  viewer: Viewer,
-  speakerId: number,
-  speedScale: number = 1.0,
-  onStart?: () => void,
-  onComplete?: () => void
+/**
+ * 汎用的な再生処理を生成するファクトリ関数
+ * @param fetchAudio 音声データを取得する非同期関数
+ */
+const createSpeaker = (
+  fetchAudio: (talk: Talk, options: any) => Promise<ArrayBuffer | null>
 ) => {
-  // Koeiromapと同じ直列再生ロジック
   let lastTime = 0;
-  let prevFetchPromise: Promise<unknown> = Promise.resolve();
+  let prevFetchPromise: Promise<any> = Promise.resolve(null);
   let prevSpeakPromise: Promise<unknown> = Promise.resolve();
 
-  const fetchPromise = prevFetchPromise.then(async () => {
-    const now = Date.now();
-    if (now - lastTime < 1000) {
-      await wait(1000 - (now - lastTime));
-    }
-    const buffer = await fetchAudioVoicevox(
-      screenplay.talk,
-      speakerId,
-      speedScale
-    ).catch(() => null);
-    lastTime = Date.now();
-    return buffer;
-  });
-
-  prevFetchPromise = fetchPromise;
-  prevSpeakPromise = Promise.all([fetchPromise, prevSpeakPromise]).then(
-    ([audioBuffer]) => {
-      onStart?.();
-      if (!audioBuffer) {
-        console.error("[VOICEVOX] audioBuffer is null or undefined");
-        return;
+  return (
+    screenplay: Screenplay,
+    viewer: Viewer,
+    options: any,
+    onStart?: () => void,
+    onComplete?: () => void
+  ) => {
+    const fetchPromise = prevFetchPromise.then(async () => {
+      const now = Date.now();
+      if (now - lastTime < 1000) {
+        await wait(1000 - (now - lastTime));
       }
-      console.log("[VOICEVOX] speakCharacterWithVoicevox: call viewer.model.speak");
-      return viewer.model?.speak(audioBuffer, screenplay);
-    }
-  );
-  prevSpeakPromise.then(() => {
-    onComplete?.();
-  });
+
+      const buffer = await fetchAudio(screenplay.talk, options).catch(
+        (err) => {
+          console.error("Error fetching audio:", err);
+          return null;
+        }
+      );
+      lastTime = Date.now();
+      return buffer;
+    });
+
+    prevFetchPromise = fetchPromise;
+
+    prevSpeakPromise = Promise.all([fetchPromise, prevSpeakPromise]).then(
+      ([audioBuffer]) => {
+        onStart?.();
+        if (!audioBuffer) {
+          console.error("[Speaker] audioBuffer is null or undefined, skipping speak.");
+          onComplete?.();
+          return;
+        }
+        viewer.model?.speak(audioBuffer, screenplay).then(() => {
+          onComplete?.();
+        });
+      }
+    );
+  };
 };
+
+/**
+ * VOICEVOX音声でVRMに喋らせる（直列再生・バグ修正版）
+ */
+export const speakCharacterWithVoicevox = createSpeaker(fetchAudioVoicevox);

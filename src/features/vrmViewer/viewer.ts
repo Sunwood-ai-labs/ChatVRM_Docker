@@ -73,6 +73,12 @@ export class Viewer {
     }
   }
 
+  // ▼▼▼ ここから追加 ▼▼▼
+  public resumeAudio(): void {
+    this.model?.resumeAudio();
+  }
+  // ▲▲▲ ここまで追加 ▲▲▲
+
   /**
    * Reactで管理しているCanvasを後から設定する
    */

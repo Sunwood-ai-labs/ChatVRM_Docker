@@ -7,7 +7,7 @@ const VOICEVOX_ENGINE_URL =
   process.env.VOICEVOX_ENGINE_URL || "http://localhost:50021";
 
 // WebSocketサーバーのURL
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+const WS_URL = `${process.env.INTERNAL_WS_URL || "ws://localhost:8080"}?from=api`;
 
 type Data = {
   status: "ok" | "error";

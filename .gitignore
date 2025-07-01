@@ -37,3 +37,7 @@ next-env.d.ts
 
 .env
 example/assets/output*.wav
+.SourceSageAssets/
+
+*.log
+example/assets/*.wav
