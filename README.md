@@ -66,19 +66,19 @@ Voicevox Engine（CPU版またはGPU版）と他サービス（Next.js など）
 ### 例: CPU版 Voicevox Engine + Next.js サービス
 
 ```sh
-docker-compose -f voicevox/docker-compose.cpu.yml -f docker-compose.yml up
+docker-compose -f docker-compose.cpu.yml -f docker-compose.yml up
 ```
 
 ### 例: GPU版 Voicevox Engine + Next.js サービス
 
 ```sh
-docker-compose -f voicevox/docker-compose.gpu.yml -f docker-compose.yml up
+docker-compose -f docker-compose.gpu.yml -f docker-compose.yml up
 ```
 
 ### 例: CPU版 Voicevox Engine + Podcast用サービス
 
 ```sh
-docker-compose -f voicevox/docker-compose.cpu.yml -f docker-compose.podcast.yml up
+docker-compose -f docker-compose.cpu.yml -f docker-compose.podcast.yml up
 ```
 
 ### 注意
@@ -126,7 +126,7 @@ npm install
 
 ```bash
 # DockerでVOICEVOXエンジンを起動
-docker run --rm -p 50021:50021 voicevox/voicevox_engine
+docker run --rm -p 50021:50021 voicevox_engine
 ```
 
 ### 4. 環境変数設定
@@ -378,19 +378,19 @@ Voicevox Engine（CPU版またはGPU版）と他サービス（Next.js など）
 ### 例: CPU版 Voicevox Engine + Next.js サービス
 
 ```sh
-docker-compose -f voicevox/docker-compose.cpu.yml -f docker-compose.yml up
+docker-compose -f docker-compose.cpu.yml -f docker-compose.yml up
 ```
 
 ### 例: GPU版 Voicevox Engine + Next.js サービス
 
 ```sh
-docker-compose -f voicevox/docker-compose.gpu.yml -f docker-compose.yml up
+docker-compose -f docker-compose.gpu.yml -f docker-compose.yml up
 ```
 
 ### 例: CPU版 Voicevox Engine + Podcast用サービス
 
 ```sh
-docker-compose -f voicevox/docker-compose.cpu.yml -f docker-compose.podcast.yml up
+docker-compose -f docker-compose.cpu.yml -f docker-compose.podcast.yml up
 ```
 
 ### 注意

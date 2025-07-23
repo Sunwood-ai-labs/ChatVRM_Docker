@@ -2,18 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-position: top center;
-  background-attachment: fixed;
-  background-size: cover;
-  background-repeat: no-repeat;
+@layer base {
+  :root {
+    /* ライトテーマ「涼雅（りょうが）」- 夏の昼 */
+    --color-primary: #025E73;
+    --color-secondary: #038C8C;
+    --color-accent: #04BFAD;
+    --color-neon-hover: #F2C166; /* Neon-Gold */
+    --color-bg-dark: #F2F2F2;
+    --color-bg-light: #FAFAFA;
+    --color-text-main: #0A1A1F;
+    --color-text-sub: #025E73;
+    --color-text-on-primary: #FAFAFA;
+    --color-text-on-secondary: #FAFAFA;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* ダークテーマ「夜涼（やりょう）」- 夏の夜 */
+      --color-primary: #04BFAD;      /* Primary-Dark */
+      --color-secondary: #F2C166;    /* Secondary-Dark */
+      --color-accent: #038C8C;      /* Accent-Dark */
+      --color-neon-hover: #66D9EF;    /* Neon-Dark */
+      --color-bg-dark: #0A1A1F;      /* BG-Dark-Dark */
+      --color-bg-light: #1A2F35;     /* BG-Light-Dark */
+      --color-text-main: #F2F2F2;
+      --color-text-sub: #F2C166;
+      --color-text-on-primary: #0A1A1F;
+      --color-text-on-secondary: #0A1A1F;
+    }
+  }
+
+  body {
+    background-position: top center;
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-main);
+    font-family: 'Kaisei Decol', serif;
+  }
 }
 
 @layer components {
   .input-range {
     -webkit-appearance: none;
     appearance: none;
-    background-color: #858585;
+    background-color: var(--color-accent);
     height: 2px;
     width: 100%;
     border-radius: 4px;
@@ -30,8 +65,8 @@ body {
     width: 24px;
     height: 24px;
     display: block;
-    border: 2px solid #856292;
-    background-color: #ffffff;
+    border: 2px solid var(--color-primary);
+    background-color: var(--color-bg-light);
     border-radius: 50%;
     -webkit-border-radius: 50%;
   }

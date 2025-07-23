@@ -47,7 +47,13 @@ export default async function handler(
     await new Promise<void>((resolve, reject) => {
       const ws = new WebSocket(WS_URL);
       ws.on("open", () => {
-        ws.send(audioBuffer, { binary: true }, (err: Error | undefined) => {
+        // ★ 音声とテキストをJSONで送信
+        const payload = JSON.stringify({
+          type: "speak",
+          text: text,
+          audio: result.audio, // base64エンコード済み
+        });
+        ws.send(payload, { binary: false }, (err: Error | undefined) => {
           ws.close();
           if (err) reject(err);
           else resolve();
