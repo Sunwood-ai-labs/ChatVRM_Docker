@@ -218,7 +218,7 @@ export default function Home() {
 
   return (
     <div
-      className={"font-M_PLUS_2"}
+      className={"font-kaisei"}
       onClick={() => {
         if (isFirstInteraction) {
           viewer.resumeAudio();
@@ -226,50 +226,42 @@ export default function Home() {
         }
       }}
     >
-      {/* ▼▼▼ AudioContext状態マーク表示 ▼▼▼ */}
-      <div style={{
-        position: "fixed",
-        top: 10,
-        right: 10,
-        zIndex: 1000,
-        background: "rgba(255,255,255,0.85)",
-        borderRadius: "8px",
-        padding: "4px 12px",
-        fontWeight: "bold",
-        fontSize: "1rem",
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5em",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
-      }}>
-        {audioState === "uninitialized" && <span>🕒 音声未初期化</span>}
-        {audioState === "suspended" && <span>🔒 音声ロック中</span>}
-        {audioState === "running" && <span>🔊 音声有効</span>}
-        {audioState === "closed" && <span>❌ 音声無効</span>}
-      </div>
-      {/* ▲▲▲ AudioContext状態マーク表示 ▲▲▲ */}
       <Meta />
       <VrmViewer />
+      {/* ▼▼▼ チャット入力欄のすぐ上にボタン群を絶対配置 ▼▼▼ */}
+      <div className="absolute bottom-[88px] left-0 w-full flex justify-between items-center gap-4 px-4 py-2 pointer-events-none z-30">
+        <div className="pointer-events-auto">
+          <Menu
+            openAiKey={openAiKey}
+            systemPrompt={systemPrompt}
+            chatLog={chatLog}
+            koeiroParam={koeiroParam}
+            assistantMessage={assistantMessage}
+            koeiromapKey={koeiromapKey}
+            onChangeAiKey={setOpenAiKey}
+            onChangeSystemPrompt={setSystemPrompt}
+            onChangeChatLog={handleChangeChatLog}
+            onChangeKoeiromapParam={setKoeiroParam}
+            handleClickResetChatLog={() => setChatLog([])}
+            handleClickResetSystemPrompt={() => setSystemPrompt(SYSTEM_PROMPT)}
+            onChangeKoeiromapKey={setKoeiromapKey}
+          />
+        </div>
+        <div className="flex items-center gap-4 pointer-events-auto">
+          <div className="flex items-center px-2 py-1 rounded-lg bg-bg-dark/80 text-text-main font-bold text-sm shadow font-kaisei">
+            {audioState === "uninitialized" && <span>🕒 音声未初期化</span>}
+            {audioState === "suspended" && <span>🔒 音声ロック中</span>}
+            {audioState === "running" && <span>🔊 音声有効</span>}
+            {audioState === "closed" && <span>❌ 音声無効</span>}
+          </div>
+          <GitHubLink />
+        </div>
+      </div>
+      {/* ▲▲▲ チャット入力欄のすぐ上にボタン群を絶対配置 ▲▲▲ */}
       <MessageInputContainer
         isChatProcessing={chatProcessing}
         onChatProcessStart={handleSendChat}
       />
-      <Menu
-        openAiKey={openAiKey}
-        systemPrompt={systemPrompt}
-        chatLog={chatLog}
-        koeiroParam={koeiroParam}
-        assistantMessage={assistantMessage}
-        koeiromapKey={koeiromapKey}
-        onChangeAiKey={setOpenAiKey}
-        onChangeSystemPrompt={setSystemPrompt}
-        onChangeChatLog={handleChangeChatLog}
-        onChangeKoeiromapParam={setKoeiroParam}
-        handleClickResetChatLog={() => setChatLog([])}
-        handleClickResetSystemPrompt={() => setSystemPrompt(SYSTEM_PROMPT)}
-        onChangeKoeiromapKey={setKoeiromapKey}
-      />
-      <GitHubLink />
     </div>
   );
 }

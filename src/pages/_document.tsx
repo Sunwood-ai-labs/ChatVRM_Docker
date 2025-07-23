@@ -13,7 +13,7 @@ export default function Document() {
           crossOrigin=""
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=M+PLUS+2&family=Montserrat&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&display=swap"
           rel="stylesheet"
         />
       </Head>
