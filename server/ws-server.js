@@ -32,18 +32,18 @@ wss.on('connection', function connection(ws, req) {
       const dataSize = data ? (Buffer.isBuffer(data) ? data.length : String(data).length) : 0;
       console.log(`[DEBUG] メッセージ受信: type=${dataType}, size=${dataSize} bytes, from IP=${ip}`);
 
-      // バイナリデータのみブロードキャスト
-      if (isBinary) {
-        let broadcastCount = 0;
-        wss.clients.forEach(function each(client) {
-          // ★ 修正: APIクライアントには送信しない
-          if (client.readyState === WebSocket.OPEN && !client.isApiClient) {
-            client.send(data, { binary: true });
-            broadcastCount++;
-          }
-        });
-        console.log(`[INFO] 音声バイナリをブロードキャスト: ${broadcastCount} ブラウザクライアント`);
+      // ★ 修正: バイナリでもテキストでも、APIクライアントからのメッセージをブロードキャストする
+      const broadcastTargetClients = Array.from(wss.clients).filter(c => c.readyState === WebSocket.OPEN && !c.isApiClient);
+      
+      if (broadcastTargetClients.length > 0) {
+        if (ws.isApiClient || isBinary) { // APIクライアントからのメッセージか、直接のバイナリ送信
+          broadcastTargetClients.forEach(client => {
+            client.send(data, { binary: isBinary });
+          });
+          console.log(`[INFO] ${dataType}をブロードキャスト: ${broadcastTargetClients.length} ブラウザクライアント`);
+        }
       }
+
     } catch (err) {
       console.error('[ERROR] メッセージ処理中に例外:', err);
     }

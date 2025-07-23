@@ -11,13 +11,11 @@ import { MessageInputContainer } from "@/components/messageInputContainer";
 import { SYSTEM_PROMPT } from "@/features/constants/systemPromptConstants";
 import { KoeiroParam, DEFAULT_PARAM } from "@/features/constants/koeiroParam";
 import { getChatResponseStream } from "@/features/chat/openAiChat";
-import { Menu } from "@/components/menu";
-import { MenuBar } from "@/components/menuBar";
-import { GitHubLink } from "@/components/githubLink";
 import { Meta } from "@/components/meta";
 import { Settings } from "@/components/settings";
 import { ChatLog } from "@/components/chatLog";
 
+import { Subtitle } from "@/components/subtitle";
 export default function Home() {
   const { viewer } = useContext(ViewerContext);
 
@@ -29,6 +27,9 @@ export default function Home() {
   const [chatLog, setChatLog] = useState<Message[]>([]);
   const [assistantMessage, setAssistantMessage] = useState("");
   const [isFirstInteraction, setIsFirstInteraction] = useState(true);
+
+  // ★ 字幕state追加
+  const [subtitle, setSubtitle] = useState("");
 
   // ▼▼▼ 追加: 設定・会話ログモーダルの状態管理 ▼▼▼
   const [showSettings, setShowSettings] = useState(false);
@@ -52,6 +53,54 @@ export default function Home() {
     };
   }, [viewer]);
   // ▲▲▲ AudioContext状態監視用 ▲▲▲
+
+  // ★ WebSocket処理追加
+  useEffect(() => {
+    if (!viewer.model) return;
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+    const ws = new WebSocket(wsUrl);
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => console.log("WebSocket接続");
+    ws.onclose = () => console.log("WebSocket切断");
+
+    ws.onmessage = async (event) => {
+      if (typeof event.data === 'string') {
+        // JSON形式のメッセージ（テキストと音声データ）を処理
+        try {
+          const messageData = JSON.parse(event.data);
+          if (messageData.type === 'speak' && messageData.audio && messageData.text) {
+            setSubtitle(messageData.text);
+
+            const base64 = messageData.audio.split(",")[1];
+            const binary = atob(base64);
+            const len = binary.length;
+            const buffer = new Uint8Array(len);
+            for (let i = 0; i < len; i++) buffer[i] = binary.charCodeAt(i);
+
+            const dummyScreenplay = {
+              expression: "neutral" as const,
+              talk: { style: "talk" as const, speakerX: 0, speakerY: 0, message: messageData.text },
+            };
+            await viewer.model!.speak(buffer.buffer, dummyScreenplay);
+
+            setSubtitle(""); // 再生完了後に字幕を消す
+          }
+        } catch (error) {
+          console.error("WebSocketメッセージの解析に失敗:", error);
+        }
+      } else if (event.data instanceof ArrayBuffer) {
+        // バイナリデータ（音声のみ）を処理
+        const buffer = event.data;
+        const dummyScreenplay = {
+          expression: "neutral" as const,
+          talk: { style: "talk" as const, speakerX: 0, speakerY: 0, message: "" },
+        };
+        await viewer.model!.speak(buffer, dummyScreenplay);
+      }
+    };
+
+    return () => ws.close();
+  }, [viewer, viewer.model]);
 
   useEffect(() => {
     if (window.localStorage.getItem("chatVRMParams")) {
@@ -106,32 +155,26 @@ export default function Home() {
   const handleSendChat = useCallback(
     async (text: string) => {
 
-      // ▼▼▼ ここから追加 ▼▼▼
       // 最初のインタラクションでAudioContextを再開する
       if (isFirstInteraction) {
         viewer.resumeAudio();
         setIsFirstInteraction(false);
       }
-      // ▲▲▲ ここまで追加 ▲▲▲
 
-      console.log("[DEBUG] handleSendChat called", text);
       if (!openAiKey) {
         setAssistantMessage("APIキーが入力されていません");
         return;
       }
       const newMessage = text;
-
       if (newMessage == null) return;
 
       setChatProcessing(true);
-      // ユーザーの発言を追加して表示
       const messageLog: Message[] = [
         ...chatLog,
         { role: "user", content: newMessage },
       ];
       setChatLog(messageLog);
 
-      // Chat GPTへ
       const messages: Message[] = [
         {
           role: "system",
@@ -163,14 +206,12 @@ export default function Home() {
 
           receivedMessage += value;
 
-          // 返答内容のタグ部分の検出
           const tagMatch = receivedMessage.match(/^\[(.*?)\]/);
           if (tagMatch && tagMatch[0]) {
             tag = tagMatch[0];
             receivedMessage = receivedMessage.slice(tag.length);
           }
 
-          // 返答を一文単位で切り出して処理する
           const sentenceMatch = receivedMessage.match(
             /^(.+[。．！？\n]|.{10,}[、,])/
           );
@@ -181,7 +222,6 @@ export default function Home() {
               .slice(sentence.length)
               .trimStart();
 
-            // 発話不要/不可能な文字列だった場合はスキップ
             if (
               !sentence.replace(
                 /^[\s\[\(\{「［（【『〈《〔｛«‹〘〚〛〙›»〕》〉』】）］」\}\)\]]+$/g,
@@ -195,12 +235,17 @@ export default function Home() {
             const aiTalks = textsToScreenplay([aiText], koeiroParam);
             aiTextLog += aiText;
 
-            // 文ごとに音声を生成 & 再生、返答を表示
             const currentAssistantMessage = sentences.join(" ");
-            console.log("[DEBUG] handleSendChat: call handleSpeakAi", aiTalks[0]);
-            handleSpeakAi(aiTalks[0], () => {
-              setAssistantMessage(currentAssistantMessage);
-            });
+            // ★ 字幕表示: 再生開始時にsetSubtitle、awaitで消去
+            await speakCharacterWithVoicevox(
+              aiTalks[0],
+              viewer,
+              { speakerId: 1, speedScale: 1.0 },
+              () => {
+                setAssistantMessage(currentAssistantMessage);
+                setSubtitle(aiTalks[0].talk.message);
+              }
+            );
           }
         }
       } catch (e) {
@@ -208,9 +253,9 @@ export default function Home() {
         console.error(e);
       } finally {
         reader.releaseLock();
+        setSubtitle(""); // 全ての発話が終わったら字幕を消す
       }
 
-      // アシスタントの返答をログに追加
       const messageLogAssistant: Message[] = [
         ...messageLog,
         { role: "assistant", content: aiTextLog },
@@ -219,7 +264,7 @@ export default function Home() {
       setChatLog(messageLogAssistant);
       setChatProcessing(false);
     },
-    [systemPrompt, chatLog, handleSpeakAi, openAiKey, koeiroParam]
+    [systemPrompt, chatLog, openAiKey, koeiroParam, viewer, isFirstInteraction]
   );
 
   return (
@@ -234,9 +279,8 @@ export default function Home() {
     >
       <Meta />
       <VrmViewer />
-      {/* ▼▼▼ チャット入力欄のすぐ上にボタン群を絶対配置 ▼▼▼ */}
-      {/* ▲▲▲ チャット入力欄のすぐ上にボタン群を絶対配置 ▲▲▲ */}
-      {/* 設定・会話ログ・音声状態・GitHubのボタン群はMenuBarとして一箇所だけ配置 */}
+      {/* ★ 字幕コンポーネント追加 */}
+      <Subtitle text={subtitle} />
       <MessageInputContainer
         isChatProcessing={chatProcessing}
         onChatProcessStart={handleSendChat}
@@ -246,7 +290,6 @@ export default function Home() {
         chatLogCount={chatLog.length}
         audioState={audioState}
       />
-      {/* モーダル表示 */}
       {showSettings && (
         <Settings
           openAiKey={openAiKey}
