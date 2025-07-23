@@ -83,13 +83,14 @@ export const createSpeaker = (
   let prevFetchPromise: Promise<any> = Promise.resolve(null);
   let prevSpeakPromise: Promise<unknown> = Promise.resolve();
 
+  // Promise<void> を返すように修正
   return (
     screenplay: Screenplay,
     viewer: Viewer,
     options: any,
     onStart?: () => void,
     onComplete?: () => void
-  ) => {
+  ): Promise<void> => {
     const fetchPromise = prevFetchPromise.then(async () => {
       const now = Date.now();
       if (now - lastTime < 1000) {
@@ -108,19 +109,26 @@ export const createSpeaker = (
 
     prevFetchPromise = fetchPromise;
 
-    prevSpeakPromise = Promise.all([fetchPromise, prevSpeakPromise]).then(
+    // Promise<void> を返すPromiseチェーンに修正
+    const newSpeakPromise = Promise.all([fetchPromise, prevSpeakPromise]).then(
       ([audioBuffer]) => {
-        onStart?.();
-        if (!audioBuffer) {
-          console.error("[Speaker] audioBuffer is null or undefined, skipping speak.");
-          onComplete?.();
-          return;
-        }
-        viewer.model?.speak(audioBuffer, screenplay).then(() => {
-          onComplete?.();
+        return new Promise<void>((resolve) => {
+          onStart?.();
+          if (!audioBuffer) {
+            console.error("[Speaker] audioBuffer is null or undefined, skipping speak.");
+            onComplete?.();
+            resolve();
+            return;
+          }
+          viewer.model?.speak(audioBuffer, screenplay).then(() => {
+            onComplete?.();
+            resolve();
+          });
         });
       }
     );
+    prevSpeakPromise = newSpeakPromise;
+    return newSpeakPromise;
   };
 };
 

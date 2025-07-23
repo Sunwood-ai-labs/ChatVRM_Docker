@@ -43,31 +43,7 @@ export const Menu = ({
   const { viewer } = useContext(ViewerContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // WebSocketで音声バイナリを受信して喋らせる
-  React.useEffect(() => {
-    if (!viewer.model) return;
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
-    const ws = new WebSocket(wsUrl);
-    ws.binaryType = "arraybuffer";
-    ws.onopen = () => {
-      console.log("WebSocket接続");
-    };
-    ws.onmessage = async (event) => {
-      if (!(event.data instanceof ArrayBuffer)) return;
-      const buffer = event.data;
-      const dummyScreenplay = {
-        expression: "neutral" as const,
-        talk: { style: "talk" as const, speakerX: 0, speakerY: 0, message: "" },
-      };
-      await viewer.model!.speak(buffer, dummyScreenplay);
-    };
-    ws.onclose = () => {
-      console.log("WebSocket切断");
-    };
-    return () => {
-      ws.close();
-    };
-  }, [viewer.model]);
+  // （WebSocket処理はindex.tsxに移設）
 
   const handleChangeSystemPrompt = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
