@@ -12,8 +12,11 @@ import { SYSTEM_PROMPT } from "@/features/constants/systemPromptConstants";
 import { KoeiroParam, DEFAULT_PARAM } from "@/features/constants/koeiroParam";
 import { getChatResponseStream } from "@/features/chat/openAiChat";
 import { Menu } from "@/components/menu";
+import { MenuBar } from "@/components/menuBar";
 import { GitHubLink } from "@/components/githubLink";
 import { Meta } from "@/components/meta";
+import { Settings } from "@/components/settings";
+import { ChatLog } from "@/components/chatLog";
 
 export default function Home() {
   const { viewer } = useContext(ViewerContext);
@@ -25,9 +28,12 @@ export default function Home() {
   const [chatProcessing, setChatProcessing] = useState(false);
   const [chatLog, setChatLog] = useState<Message[]>([]);
   const [assistantMessage, setAssistantMessage] = useState("");
-  // ▼▼▼ ここから追加 ▼▼▼
   const [isFirstInteraction, setIsFirstInteraction] = useState(true);
-  // ▲▲▲ ここまで追加 ▲▲▲
+
+  // ▼▼▼ 追加: 設定・会話ログモーダルの状態管理 ▼▼▼
+  const [showSettings, setShowSettings] = useState(false);
+  const [showChatLog, setShowChatLog] = useState(false);
+  // ▲▲▲
 
   // ▼▼▼ AudioContext状態監視用 ▼▼▼
   const [audioState, setAudioState] = useState<"suspended" | "running" | "closed" | "uninitialized">("uninitialized");
@@ -229,39 +235,37 @@ export default function Home() {
       <Meta />
       <VrmViewer />
       {/* ▼▼▼ チャット入力欄のすぐ上にボタン群を絶対配置 ▼▼▼ */}
-      <div className="absolute bottom-[88px] left-0 w-full flex justify-between items-center gap-4 px-4 py-2 pointer-events-none z-30">
-        <div className="pointer-events-auto">
-          <Menu
-            openAiKey={openAiKey}
-            systemPrompt={systemPrompt}
-            chatLog={chatLog}
-            koeiroParam={koeiroParam}
-            assistantMessage={assistantMessage}
-            koeiromapKey={koeiromapKey}
-            onChangeAiKey={setOpenAiKey}
-            onChangeSystemPrompt={setSystemPrompt}
-            onChangeChatLog={handleChangeChatLog}
-            onChangeKoeiromapParam={setKoeiroParam}
-            handleClickResetChatLog={() => setChatLog([])}
-            handleClickResetSystemPrompt={() => setSystemPrompt(SYSTEM_PROMPT)}
-            onChangeKoeiromapKey={setKoeiromapKey}
-          />
-        </div>
-        <div className="flex items-center gap-4 pointer-events-auto">
-          <div className="flex items-center px-2 py-1 rounded-lg bg-bg-dark/80 text-text-main font-bold text-sm shadow font-kaisei">
-            {audioState === "uninitialized" && <span>🕒 音声未初期化</span>}
-            {audioState === "suspended" && <span>🔒 音声ロック中</span>}
-            {audioState === "running" && <span>🔊 音声有効</span>}
-            {audioState === "closed" && <span>❌ 音声無効</span>}
-          </div>
-          <GitHubLink />
-        </div>
-      </div>
       {/* ▲▲▲ チャット入力欄のすぐ上にボタン群を絶対配置 ▲▲▲ */}
+      {/* 設定・会話ログ・音声状態・GitHubのボタン群はMenuBarとして一箇所だけ配置 */}
       <MessageInputContainer
         isChatProcessing={chatProcessing}
         onChatProcessStart={handleSendChat}
+        onOpenSettings={() => setShowSettings(true)}
+        onOpenChatLog={() => setShowChatLog((v) => !v)}
+        isChatLogOpen={showChatLog}
+        chatLogCount={chatLog.length}
+        audioState={audioState}
       />
+      {/* モーダル表示 */}
+      {showSettings && (
+        <Settings
+          openAiKey={openAiKey}
+          chatLog={chatLog}
+          systemPrompt={systemPrompt}
+          koeiroParam={koeiroParam}
+          koeiromapKey={koeiromapKey}
+          onClickClose={() => setShowSettings(false)}
+          onChangeAiKey={(e) => setOpenAiKey(e.target.value)}
+          onChangeSystemPrompt={(e) => setSystemPrompt(e.target.value)}
+          onChangeChatLog={handleChangeChatLog}
+          onChangeKoeiroParam={(x, y) => setKoeiroParam({ speakerX: x, speakerY: y })}
+          onClickOpenVrmFile={() => {}} // 必要に応じて実装
+          onClickResetChatLog={() => setChatLog([])}
+          onClickResetSystemPrompt={() => setSystemPrompt(SYSTEM_PROMPT)}
+          onChangeKoeiromapKey={(e) => setKoeiromapKey(e.target.value)}
+        />
+      )}
+      {showChatLog && <ChatLog messages={chatLog} />}
     </div>
   );
 }

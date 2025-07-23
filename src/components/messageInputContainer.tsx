@@ -5,6 +5,11 @@ import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 type Props = {
   isChatProcessing: boolean;
   onChatProcessStart: (text: string) => void;
+  onOpenSettings: () => void;
+  onOpenChatLog: () => void;
+  isChatLogOpen: boolean;
+  chatLogCount: number;
+  audioState: "suspended" | "running" | "closed" | "uninitialized";
 };
 
 /**
@@ -16,6 +21,11 @@ type Props = {
 export const MessageInputContainer = ({
   isChatProcessing,
   onChatProcessStart,
+  onOpenSettings,
+  onOpenChatLog,
+  isChatLogOpen,
+  chatLogCount,
+  audioState,
 }: Props) => {
   const [userMessage, setUserMessage] = useState("");
   const [speechRecognition, setSpeechRecognition] =
@@ -131,6 +141,11 @@ export const MessageInputContainer = ({
         onClickMicButton={handleClickMicButton}
         onClickSendButton={handleClickSendButton}
         onAudioFileSelected={handleAudioFileSelected}
+        onOpenSettings={onOpenSettings}
+        onOpenChatLog={onOpenChatLog}
+        isChatLogOpen={isChatLogOpen}
+        chatLogCount={chatLogCount}
+        audioState={audioState}
       />
     </>
   );
