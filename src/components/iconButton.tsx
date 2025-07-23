@@ -15,16 +15,18 @@ export const IconButton = ({
   return (
     <button
       {...rest}
-      className={`bg-primary hover:bg-primary-hover active:bg-primary-press disabled:bg-primary-disabled text-white rounded-16 text-sm p-8 text-center inline-flex items-center mr-2
+      className={`bg-primary text-text-on-primary hover:brightness-110 active:brightness-95 disabled:opacity-50 transition-all rounded-lg text-sm p-2 text-center inline-flex items-center font-kaisei
         ${rest.className}
       `}
     >
       {isProcessing ? (
-        <pixiv-icon name={"24/Dot"} scale="1"></pixiv-icon>
+        <span className="animate-spin">
+          <pixiv-icon name={"24/Dot"} scale="1"></pixiv-icon>
+        </span>
       ) : (
         <pixiv-icon name={iconName} scale="1"></pixiv-icon>
       )}
-      {label && <div className="mx-4 font-bold">{label}</div>}
+      {label && <div className="mx-2 font-bold">{label}</div>}
     </button>
   );
 };

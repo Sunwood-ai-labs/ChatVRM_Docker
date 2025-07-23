@@ -21,7 +21,7 @@ export const ChatLog = ({ messages }: Props) => {
   }, [messages]);
   return (
     <div className="absolute w-col-span-6 max-w-full h-[100svh] pb-64">
-      <div className="max-h-full px-16 pt-104 pb-64 overflow-y-auto scroll-hidden">
+      <div className="max-h-full px-4 pt-24 pb-16 overflow-y-auto scroll-hidden">
         {messages.map((msg, i) => {
           return (
             <div key={i} ref={messages.length - 1 === i ? chatScrollRef : null}>
@@ -35,20 +35,23 @@ export const ChatLog = ({ messages }: Props) => {
 };
 
 const Chat = ({ role, message }: { role: string; message: string }) => {
-  const roleColor =
-    role === "assistant" ? "bg-secondary text-white " : "bg-base text-primary";
-  const roleText = role === "assistant" ? "text-secondary" : "text-primary";
-  const offsetX = role === "user" ? "pl-40" : "pr-40";
+  const isAssistant = role === "assistant";
+
+  const roleColor = isAssistant
+    ? "bg-secondary text-text-on-secondary"
+    : "bg-primary text-text-on-primary";
+  const roleText = isAssistant ? "text-secondary" : "text-primary";
+  const offsetX = !isAssistant ? "pl-10" : "pr-10";
 
   return (
-    <div className={`mx-auto max-w-sm my-16 ${offsetX}`}>
+    <div className={`mx-auto max-w-sm my-4 ${offsetX}`}>
       <div
-        className={`px-24 py-8 rounded-t-8 font-bold tracking-wider ${roleColor}`}
+        className={`px-4 py-1 rounded-t-lg font-bold tracking-wider font-kaisei ${roleColor}`}
       >
-        {role === "assistant" ? "CHARACTER" : "YOU"}
+        {isAssistant ? "CHARACTER" : "YOU"}
       </div>
-      <div className="px-24 py-16 bg-white rounded-b-8">
-        <div className={`typography-16 font-bold ${roleText}`}>{message}</div>
+      <div className="px-6 py-4 bg-bg-light rounded-b-lg">
+        <div className={`text-base font-bold font-kaisei ${roleText}`}>{message}</div>
       </div>
     </div>
   );
